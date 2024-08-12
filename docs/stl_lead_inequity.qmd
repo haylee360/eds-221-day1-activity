@@ -1,0 +1,94 @@
+---
+title: "Lead Inequity"
+author: "Haylee Oyler"
+format: html
+editor: visual
+execute:
+  warning: false
+  message: false
+
+---
+
+## Setup
+
+```{r}
+library(tidyverse)
+library(janitor)
+library(here)
+library(skimr)
+library(GGally)
+```
+
+## Read in the data
+
+```{r}
+# use here to read csv ----
+stl_lead <- read_csv(here::here("data", "stl_blood_lead.csv"))
+
+# convert names to snake case ----
+stl_lead <- clean_names(stl_lead)
+```
+
+## Data exploration
+
+```{r}
+#| eval: false
+# skimming the data ----
+skim(stl_lead)
+names(stl_lead)
+dim(stl_lead)
+head(stl_lead)
+
+# visualizing the data ----
+ggpairs(stl_lead, columns = c(5, 6, 8, 10))
+
+# summary stats ----
+mean(stl_lead$pct_elevated)
+median(stl_lead$pct_elevated)
+summary(stl_lead)
+
+```
+
+## Adding a new column
+
+```{r}
+stl_lead_prop <- stl_lead %>%
+  mutate(prop_white = (white / total_pop) * 100)
+```
+
+## Create a scatterplot
+
+```{r}
+#| eval: false
+# Finding the line of best fit ----
+best_fit <- lm(stl_lead_prop$pct_elevated ~ stl_lead_prop$prop_white)   
+summary(best_fit)
+```
+
+```{r}
+ggplot(stl_lead_prop, aes(y = pct_elevated, x = prop_white)) +
+  geom_point(aes(colour = pct_elevated), show.legend = FALSE) +
+  geom_abline(slope = -0.11806, intercept = 14.98477, color = "red") +
+  theme_minimal() +
+  labs(title = "Children with elevated PCT vs. whiteness", 
+       y = "Percent elevated PCT", 
+       x = "Percent white")
+```
+
+## Create a histogram
+
+```{r}
+ggplot(stl_lead_prop, aes(x = pct_elevated)) +
+  geom_histogram(fill = "orange", color = "green") +
+  theme_minimal() +
+  labs(title = "Percent elevated lead",
+       x = "Percent elevated lead",
+       y = "Count")
+```
+
+## Saving the figure
+
+```{r}
+ggsave(here::here("figs", "pct_elevated_lead_plot.png"))
+```
+
